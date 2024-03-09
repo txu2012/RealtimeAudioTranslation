@@ -8,6 +8,8 @@ To capture computer audio, a loopback system is needed to feed audio into an inp
 
 To Use:
 ----
+Run Main.py file to start program. 
+
 Select the loopback device that can be captured from and press start.
 
 ![alt text](image-2.png)
