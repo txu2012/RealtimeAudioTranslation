@@ -1,3 +1,9 @@
+"""
+Created on Fri Mar  8 11:07:14 2024
+
+@author: Tony
+"""
+
 import tkinter as tk
 from tkinter.ttk import *
 import tkinter.scrolledtext as scrolledtext
