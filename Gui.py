@@ -149,7 +149,7 @@ class Gui(object):
             self._btn_select.config(state='normal')
         
     # Event/Gui functions     
-    def onListBoxSelection(self, event):
+    def onListBoxSelection(self, event=None):
         self._selected_device_index = self._listbox_devices.curselection()[0]
         device_info = self._presenter.get_device_list()[self._selected_device_index]
         device_host_info = self._presenter.get_device_host_api_info(self._selected_device_index)
@@ -175,9 +175,9 @@ class Gui(object):
         self._presenter.stop_translating()
         self.UpdateView()
         
-    def onComboBoxSelection(self, event):
+    def onComboBoxSelection(self, event=None):
         self._presenter.set_translation_lang(self._cb_from_lang.get(), self._cb_to_lang.get())
         self.UpdateView()
         
-    def nudAudioUpdated(self, event):
+    def nudAudioUpdated(self, event=None):
         self._presenter.set_audio_time_acquire(self._audio_val.get())

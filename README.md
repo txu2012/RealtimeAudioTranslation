@@ -9,3 +9,5 @@ To capture computer audio, a loopback system is needed to feed audio into an inp
 To Use:
 ----
 Select the loopback device that can be captured from and press start.
+
+**Note: The initial start may take a little bit of time to start showing translation
