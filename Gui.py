@@ -66,8 +66,8 @@ class Gui(object):
                                              values=self._supported_langs)
         self._cb_to_lang.bind('<<ComboboxSelected>>', self.onComboBoxSelection)
         self._cb_to_lang.place(x=135, y=2)
-        self._cb_from_lang.current(0)
-        self._cb_to_lang.current(1)
+        self._cb_from_lang.current(1)
+        self._cb_to_lang.current(0)
         
         self._btn_start = tk.Button(main_frame, text="Start", width=10, command=self.onBtnStartClick)
         self._btn_start.config(state='disabled')
