@@ -11,6 +11,9 @@ class Translate(object):
         self._config = {}
         self._translator = GoogleTranslator(source='ja', target='en')
         
+        if os.path.isfile("out.wav"):
+            os.remove("out.wav")
+        
     def set_translation_config(self, source, target):
         self._translator.target = target
         self._translator.source = source
@@ -29,7 +32,6 @@ class Translate(object):
         
         audio = wh.pad_or_trim(wh.load_audio("out.wav"))
         result = wh.transcribe(self._model, audio, fp16=False)["text"]
-        os.remove("out.wav")
         
         return result, GoogleTranslator(source='ja', target='en').translate(text=result)
     
