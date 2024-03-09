@@ -2,10 +2,15 @@ import pyaudio
 import wave
 import numpy
 import whisper
+import io
+import soundfile as sf
+import numpy as np
 
 class SoundDevice(object):
     def __init__(self):
         self._default_frames = 512
+        #self._default_frames = 16000*5
+        
         self._record_time = 5
         self._pyaudio = pyaudio.PyAudio()
         self._device_list = []
@@ -45,7 +50,6 @@ class SoundDevice(object):
         self._current_device_channel_count = self._current_device["maxInputChannels"]  \
             if (self._current_device["maxOutputChannels"] < self._current_device["maxInputChannels"]) \
             else self._current_device["maxOutputChannels"] 
-        #self._current_device_channel_count = self._current_device["maxInputChannels"] 
         
         self._current_device_stream = \
             self._pyaudio.open(format=pyaudio.paInt16,
@@ -56,17 +60,20 @@ class SoundDevice(object):
                                input_device_index=self._current_device["index"]
                                )
             
-    def record_audio(self, length: int):    
-        self._recorded_chunks = []    
-        for i in range(0, int(int(self._current_device["defaultSampleRate"]) / self._default_frames * length)):
-            self._recorded_chunks.append(self._current_device_stream.read(self._default_frames))
-            #data = self._current_device_stream.read(self._default_frames)
-            #data_proc = numpy.frombuffer(data, dtype=numpy.int16).flatten().astype(numpy.float32) / (2**15)
-            #data_proc = whisper.pad_or_trim(data_proc)
-            
-            #recorded_audio.append(data_proc)
+        audio_config = {
+            "Framerate": self._current_device["defaultSampleRate"],
+            "SampleWidth": self._pyaudio.get_sample_size(pyaudio.paInt16),
+            "Channels": self._current_device_channel_count
+        }
         
-        return self._recorded_chunks
+        return audio_config
+    
+    def record_audio(self, length: int = 5):    
+        recorded_chunks = [] 
+        for i in range(0, int(int(self._current_device["defaultSampleRate"]) / self._default_frames * length)):
+            recorded_chunks.append(self._current_device_stream.read(self._default_frames))
+        
+        return recorded_chunks  
         
     def save_audio(self):
         filename = "out.wav"
@@ -80,14 +87,3 @@ class SoundDevice(object):
     def close_stream(self):
         self._current_device_stream.stop_stream()
         self._current_device_stream.close()
-        
-#with SoundDevice() as sd:
-#    dev = sd.enumerate_devices()
-#    
-#    sd.set_device(71)
-#    sd.open_stream()
-#    data = sd.record_audio(5)
-#    sd.close_stream()
-#    sd.save_audio()
-#    
-#    print('Finished.')
