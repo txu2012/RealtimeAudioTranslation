@@ -22,6 +22,7 @@ class Presenter(object):
         self._audio_queue = queue.Queue()
         self._translated_queue = queue.Queue()
         self._audio_time_acquire = 5
+        self._translator_index = 0
                 
     def initialize(self):
         self._view.initialize()    
@@ -32,23 +33,12 @@ class Presenter(object):
     def get_device_host_api_info(self, index):
         return self._sound_device.get_device_host_api_info(index)
     
-    def clear_queues(self):
-        with self._audio_queue.mutex:
-            self._audio_queue.queue.clear()
-            self._audio_queue.all_tasks_done.notify_all()
-            self._audio_queue.unfinished_tasks = 0
-            
-        with self._translated_queue.mutex:
-            self._translated_queue.queue.clear()
-            self._translated_queue.all_tasks_done.notify_all()
-            self._translated_queue.unfinished_tasks = 0
-    
     def set_device(self, index):
         self._sound_device.set_device(index)
         self._device_selected = True
     
     def set_translation_lang(self, source, target):
-        self._translator.set_translation_config(source, target)
+        self._translator.set_translation_config(source, target, self._translator_index)
     
     def start_translating(self):
         self._stop_threads = False
@@ -58,6 +48,9 @@ class Presenter(object):
         if not self._audio_queue.empty:
             self.clear_queues()
         
+        self._audio_queue = queue.Queue()
+        self._translated_queue = queue.Queue() 
+        
         self._acquire_th = threading.Thread(target=self.acquire_audio, daemon=True).start()
         self._translate_th = threading.Thread(target=self.translate_audio, daemon=True).start()
         
@@ -66,6 +59,9 @@ class Presenter(object):
     def stop_translating(self):
         self._stop_threads = True
         self._workers_running = False
+    
+    def set_translator(self, index):
+        self._translator_index = index
     
     def set_audio_time_acquire(self, acq_time):
         self._audio_time_acquire = acq_time
@@ -79,7 +75,7 @@ class Presenter(object):
         while not self._stop_threads:
             audio = self._audio_queue.get()
             
-            transcribed_text, translated_text = self._translator.process_data(audio)            
+            transcribed_text, translated_text = self._translator.process_data(audio, self._translator_index)            
             self._view.UpdateTextFields(transcribed_text, translated_text)
             
             self._audio_queue.task_done()

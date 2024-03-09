@@ -17,10 +17,12 @@ class Gui(object):
         
         self._selected_from_lang = None
         self._selected_to_lang = None
+        self._selected_translator = None
         self._selected_device_index = -1
         self._audio_val = tk.IntVar()
         
-        self._supported_langs = ["en", "jp"]
+        self._supported_langs = ["en", "ja"]
+        self._translators = ["Google", "Whisper"]
         
     def __enter__(self):
         return self    
@@ -76,6 +78,16 @@ class Gui(object):
         self._btn_stop.config(state='disabled')
         self._btn_stop.place(x=310)
         
+        tk.Label(main_frame, text="Translator :").place(x=400)
+        self._cb_translator = tk.ttk.Combobox(main_frame,
+                                              state="readonly",
+                                              width=15,
+                                              textvariable=self._selected_translator,
+                                              values=self._translators)
+        self._cb_translator.bind('<<ComboboxSelected>>', self.onComboBoxSelection)
+        self._cb_translator.place(x=470, y=2)
+        self._cb_translator.current(0)
+        
         tk.Label(main_frame, text="Audio Capture Time :").place(x=600)
         self._audio_val.set(5)
         self._nud_audio = tk.Spinbox(main_frame, from_=0, to=600, width=4, textvariable=self._audio_val, command=self.nudAudioUpdated)
@@ -85,11 +97,15 @@ class Gui(object):
         tk.Label(main_frame, text="Original:").place(x=2, y=40)
         self._txt_transcribed = scrolledtext.ScrolledText(main_frame, width=52)
         self._txt_transcribed.config(state='disabled')
+        self._txt_transcribed.tag_add("time", "1.0", "1.20", "start")
+        self._txt_transcribed.tag_config("time", foreground="red")
         self._txt_transcribed.place(x=2, y=60, height=415)
         
         tk.Label(main_frame, text="Translated:").place(x=400, y=40)
         self._txt_translated = scrolledtext.ScrolledText(main_frame, width=52)
         self._txt_translated.config(state='disabled')
+        self._txt_translated.tag_add("time", "1.0", "1.20", "start")
+        self._txt_translated.tag_config("time", foreground="red")
         self._txt_translated.place(x=400, y=60, height=415)
         
     def create_devices_frame(self):
@@ -114,7 +130,7 @@ class Gui(object):
         self._btn_refresh.place(x=284, y=0)
         
         self._btn_select = tk.Button(devices_frame, text="Select", width=10, 
-                                     command= lambda: self._presenter.set_device(self._selected_device_index))
+                                     command=self.onbtnSelectClick)
         self._btn_select.place(x=704, y=0)
         
         devices = self._presenter.get_device_list()
@@ -127,26 +143,38 @@ class Gui(object):
         formatted_string = datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d.%H:%M:%S")
         
         self._txt_transcribed.config(state='normal')
-        self._txt_transcribed.insert(tk.END, formatted_string + ": " + original + '\n', ('time'))
+        self._txt_transcribed.insert(tk.END, formatted_string + ":\n",("time"))
         self._txt_transcribed.yview(tk.END)
+        self._txt_transcribed.insert(tk.END, original + '\n')
+        self._txt_transcribed.yview(tk.END)
+        
+        
         self._txt_transcribed.config(state='disabled')
         
         self._txt_translated.config(state='normal')
-        self._txt_translated.insert(tk.END, formatted_string + ": " + translated + '\n', ('time'))
+        self._txt_translated.insert(tk.END, formatted_string + ":\n", ("time"))
+        self._txt_translated.yview(tk.END)
+        self._txt_translated.insert(tk.END, translated + '\n')
         self._txt_translated.yview(tk.END)
         self._txt_translated.config(state='disabled')
         
         self.UpdateView()
         
-    def UpdateView(self):
+    def UpdateView(self):            
         if self._presenter._workers_running:
             self._btn_start.config(state='disabled')
             self._btn_stop.config(state='normal')
             self._btn_select.config(state='disabled')
+            self._listbox_devices.config(state='disabled')
         else:
             self._btn_start.config(state='normal')
             self._btn_stop.config(state='disabled')
             self._btn_select.config(state='normal')
+            self._listbox_devices.config(state='normal')
+            
+        if not self._presenter._device_selected:
+            self._btn_start.config(state='disabled')
+            self._btn_stop.config(state='disabled')
         
     # Event/Gui functions     
     def onListBoxSelection(self, event=None):
@@ -175,8 +203,19 @@ class Gui(object):
         self._presenter.stop_translating()
         self.UpdateView()
         
+    def onbtnSelectClick(self):
+        self._presenter.set_device(self._selected_device_index)
+        self.UpdateView()
+        
     def onComboBoxSelection(self, event=None):
         self._presenter.set_translation_lang(self._cb_from_lang.get(), self._cb_to_lang.get())
+        self._presenter.set_translator(self._cb_translator.current())
+        
+        if self._cb_translator.current() == 1:
+            self.UpdateTextFields("Warning: Whisper is mostly trained for translating to english. Audio will only translate to english.",
+                                  "Warning: Whisper is mostly trained for translating to english. Audio will only translate to english.")
+            self._cb_to_lang.current(0)
+        
         self.UpdateView()
         
     def nudAudioUpdated(self, event=None):

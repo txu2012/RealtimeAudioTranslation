@@ -10,6 +10,6 @@ To Use:
 ----
 Select the loopback device that can be captured from and press start.
 
-![alt text](image-1.png)
+![alt text](image-2.png)
 
 **Note: The initial start may take a little bit of time to start showing translation
