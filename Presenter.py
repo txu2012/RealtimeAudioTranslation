@@ -71,6 +71,8 @@ class Presenter(object):
             data = self._sound_device.record_audio(self._audio_time_acquire)
             self._audio_queue.put(data)
             
+        self._sound_device.close_stream()
+            
     def translate_audio(self):
         while not self._stop_threads:
             audio = self._audio_queue.get()
