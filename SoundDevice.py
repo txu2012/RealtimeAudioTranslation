@@ -8,7 +8,6 @@ import pyaudio
 import wave
 import numpy
 import whisper
-import io
 import soundfile as sf
 import numpy as np
 
@@ -78,7 +77,7 @@ class SoundDevice(object):
         recorded_chunks = [] 
         for i in range(0, int(int(self._current_device["defaultSampleRate"]) / self._default_frames * length)):
             recorded_chunks.append(self._current_device_stream.read(self._default_frames))
-        
+               
         return recorded_chunks  
         
     def save_audio(self, data):

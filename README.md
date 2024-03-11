@@ -4,6 +4,8 @@ Uses PyAudio, Google Translate, and OpenAi Whisper to capture computer audio and
 
 To capture computer audio, a loopback system is needed to feed audio into an input for pyaudio to record. A virtual audio cable (eg. VB Audio) can be used to create a loopback to capture from.
 
+Currently translating Japanese to English and vice versa supported.
+
 **Note: Google translate does not translate 100% accurately, but translator can be swapped in the future.
 
 To Use:
@@ -15,3 +17,9 @@ Select the loopback device that can be captured from and press start.
 ![alt text](image-2.png)
 
 **Note: The initial start may take a little bit of time to start showing translation
+
+
+Future:
+----
+- Support for more translators/languages (Api Keys required when needed)
+- Switch to faster-whisper (voice detection using Silero VAD)
