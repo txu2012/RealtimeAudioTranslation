@@ -6,6 +6,7 @@ Created on Fri Mar  8 11:07:14 2024
 """
 
 import SoundDevice
+import AudioCapture
 import Presenter
 import Gui
 
@@ -14,7 +15,7 @@ class RealtimeAudioTranslate():
 
     def __init__(self):  
         view = Gui.Gui()
-        model = SoundDevice.SoundDevice() 
+        model = AudioCapture.AudioCapture() 
              
         self._presenter = Presenter.Presenter(model, view)
         view.set_presenter(self._presenter)

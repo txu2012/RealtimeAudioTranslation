@@ -11,9 +11,9 @@ import Translation
 class Presenter(object):
     def __init__(self, model, view):
         self._view = view
-        self._sound_device = model
+        self._device = model
         self._translator = Translation.Translate()
-        self._device_list = self._sound_device.enumerate_devices()
+        self._device_list = self._device.enumerate_devices()
         self._device_selected = False
         
         self._stop_threads = True
@@ -31,10 +31,10 @@ class Presenter(object):
         return self._device_list
     
     def get_device_host_api_info(self, index):
-        return self._sound_device.get_device_host_api_info(index)
+        return self._device.get_device_host_api_info(index)
     
     def set_device(self, index):
-        self._sound_device.set_device(index)
+        self._device.set_device(index)
         self._device_selected = True
     
     def set_translation_lang(self, source, target):
@@ -42,17 +42,17 @@ class Presenter(object):
     
     def start_translating(self):
         self._stop_threads = False
-        audio_config = self._sound_device.open_stream()
+        audio_config = self._device.open_stream()
         self._translator.set_audio_data_config(audio_config)
         
         if not self._audio_queue.empty:
             self.clear_queues()
         
-        self._audio_queue = queue.Queue()
-        self._translated_queue = queue.Queue() 
+        #self._audio_queue = queue.Queue()
+        #self._translated_queue = queue.Queue() 
         
-        self._acquire_th = threading.Thread(target=self.acquire_audio, daemon=True).start()
-        self._translate_th = threading.Thread(target=self.translate_audio, daemon=True).start()
+        #self._acquire_th = threading.Thread(target=self.acquire_audio, daemon=True).start()
+        #self._translate_th = threading.Thread(target=self.translate_audio, daemon=True).start()
         
         self._workers_running = True
     
@@ -68,10 +68,10 @@ class Presenter(object):
     
     def acquire_audio(self):
         while not self._stop_threads:
-            data = self._sound_device.record_audio(self._audio_time_acquire)
+            data = self._device.record_audio(self._audio_time_acquire)
             self._audio_queue.put(data)
             
-        self._sound_device.close_stream()
+        self._device.close_stream()
             
     def translate_audio(self):
         while not self._stop_threads:
