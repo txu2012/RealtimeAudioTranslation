@@ -15,3 +15,9 @@ Select the loopback device that can be captured from and press start.
 ![alt text](image-2.png)
 
 **Note: The initial start may take a little bit of time to start showing translation
+
+
+Future:
+----
+- Switch to faster-whisper
+- Add voice detection using Silero VAD
