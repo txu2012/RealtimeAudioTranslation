@@ -10,6 +10,40 @@ import tkinter.scrolledtext as scrolledtext
 import time
 import datetime
 
+class ChildDialog(object):
+    def __init__(self, parent, presenter):
+        self._parent = parent
+        self._presenter = presenter
+        
+        self._keys = self._presenter._config.load_values()
+        
+        self._diag_api_key = tk.Toplevel(master=self._parent, width=400, height=200)
+        self._diag_api_key.title("Api Keys")
+        
+        self._deepl_key = tk.StringVar()
+        tk.Label(self._diag_api_key, text="DeepL :").place(x=50, y=20)
+        self._deepl_entry = tk.Entry(self._diag_api_key, textvariable=self._deepl_key, width=40)
+        self._deepl_entry.place(x=100, y= 20)
+        
+        self._aai_key = tk.StringVar()
+        tk.Label(self._diag_api_key, text="AssemblyAi :").place(x=20, y=50)
+        self._aai_entry = tk.Entry(self._diag_api_key, textvariable=self._aai_key, width=40)
+        self._aai_entry.place(x=100, y= 50)
+        
+        self._deepl_key.set(self._keys["deepl"])
+        self._aai_key.set(self._keys["assemblyai"])
+        
+        self._btn_api_key_diag = tk.Button(self._diag_api_key, text='Set', width=10, command=self.set_keys)
+        self._btn_api_key_diag.place(x=160, y=170)
+        
+    def set_keys(self):
+        keys = {
+            "deepl": self._deepl_key.get(),
+            "assemblyai": self._aai_key.get()
+        }
+        
+        self._presenter.set_api_keys(keys)
+
 class Gui(object):
     def __init__(self):
         self._root_window = tk.Tk()
@@ -28,7 +62,7 @@ class Gui(object):
         self._audio_val = tk.IntVar()
         
         self._supported_langs = ["en", "ja"]
-        self._translators = ["Google", "Whisper"]
+        self._translators = ["Google", "DeepL", "Whisper"]
         
     def __enter__(self):
         return self    
@@ -44,6 +78,7 @@ class Gui(object):
         self._root_window.destroy()
         
     def initialize(self):
+        self.create_menu_bar()
         self.create_main_frame()
         self.create_devices_frame()
         
@@ -51,6 +86,17 @@ class Gui(object):
         self._root_window.geometry(f"{self._root_window_width}x{self._root_window_height}")
         self._root_window.resizable(False, False)
         self._root_window.mainloop()
+        
+    def create_menu_bar(self):
+        # Menu Bar
+        self._menu = tk.Menu(self._root_window)
+        self._root_window.config(menu=self._menu)
+        
+        file_menu = tk.Menu(self._menu, tearoff=False)
+        file_menu.add_cascade(label="Api Keys", command=self.onApiKeyMenu)
+        file_menu.add_command(label='Exit', command=self._root_window.destroy)
+        
+        self._menu.add_cascade(label="File", menu=file_menu)    
         
     # GUI Creation
     def create_main_frame(self):
@@ -182,7 +228,15 @@ class Gui(object):
             self._btn_start.config(state='disabled')
             self._btn_stop.config(state='disabled')
         
-    # Event/Gui functions     
+    # Event/Gui functions  
+    def onApiKeyMenu(self, event=None):
+        api_key_diag = ChildDialog(self._root_window, self._presenter)
+        #self._diag_api_key = tk.Toplevel(master=self._root_window, width=300, height=200)
+        #self._diag_api_key.title("Api Keys")
+        
+        #self._btn_api_key_diag = tk.Button(self._diag_api_key, text='Set', width=10)
+        #self._btn_api_key_diag.place(x=110, y=170)
+           
     def onListBoxSelection(self, event=None):
         self._selected_device_index = self._listbox_devices.curselection()[0]
         device_info = self._presenter.get_device_list()[self._selected_device_index]
@@ -217,7 +271,7 @@ class Gui(object):
         self._presenter.set_translation_lang(self._cb_from_lang.get(), self._cb_to_lang.get())
         self._presenter.set_translator(self._cb_translator.current())
         
-        if self._cb_translator.current() == 1:
+        if self._cb_translator.current() == 2:
             self.UpdateTextFields("Warning: Whisper is mostly trained for translating to english. Audio will only translate to english.",
                                   "Warning: Whisper is mostly trained for translating to english. Audio will only translate to english.")
             self._cb_to_lang.current(0)
