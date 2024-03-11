@@ -43,6 +43,7 @@ class ChildDialog(object):
         }
         
         self._presenter.set_api_keys(keys)
+        self._diag_api_key.destroy()
 
 class Gui(object):
     def __init__(self):
