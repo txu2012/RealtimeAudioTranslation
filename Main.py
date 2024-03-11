@@ -4,8 +4,6 @@ Created on Fri Mar  8 11:07:14 2024
 
 @author: Tony
 """
-
-import SoundDevice
 import AudioCapture
 import Presenter
 import Gui

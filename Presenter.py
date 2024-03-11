@@ -11,7 +11,6 @@ import Translation
 class Presenter(object):
     def __init__(self, model, view, config):
         self._view = view
-#<<<<<<< HEAD
         self._device = model
         
         self._config = config
@@ -19,13 +18,7 @@ class Presenter(object):
         self._translator = Translation.Translate(self._config.load_values())
 
         self._device_list = self._device.enumerate_devices()
-#=======
-        #self._sound_device = model
-        
-        
-        
-        #self._device_list = self._sound_device.enumerate_devices()
-#>>>>>>> main
+
         self._device_selected = False
         
         self._stop_threads = True
@@ -60,6 +53,11 @@ class Presenter(object):
     
     def set_api_keys(self, keys):
         self._translator.set_api_keys(keys)
+        self._config.save_json(keys)
+        
+    def stop_translating(self):
+        self._stop_threads = True
+        self._workers_running = False
     
     def start_translating(self):
         self._stop_threads = False
@@ -76,10 +74,6 @@ class Presenter(object):
         self._translate_th = threading.Thread(target=self.translate_audio, daemon=True).start()
         
         self._workers_running = True
-    
-    def stop_translating(self):
-        self._stop_threads = True
-        self._workers_running = False
         
     def acquire_audio(self):
         while not self._stop_threads:
@@ -92,7 +86,8 @@ class Presenter(object):
         while not self._stop_threads:
             audio = self._audio_queue.get()
             
-            transcribed_text, translated_text = self._translator.process_data(audio, self._translator_index)            
+            transcribed_text, translated_text = \
+                self._translator.process_data(audio, self._translator_index)            
             
             if str(transcribed_text) == str(" you"):
                 self._audio_queue.task_done()
@@ -101,4 +96,5 @@ class Presenter(object):
             self._view.UpdateTextFields(transcribed_text, translated_text)
             
             self._audio_queue.task_done()
+   
             

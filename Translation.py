@@ -4,12 +4,10 @@ Created on Fri Mar  8 11:07:14 2024
 @author: Tony
 """
 
-import whisper as wh
 from faster_whisper import WhisperModel
 import wave
 import os
 import torch
-import assemblyai as aai
 from deep_translator import (GoogleTranslator,
                              DeeplTranslator)
 
@@ -18,11 +16,12 @@ class Translate(object):
         self._selected_source = "ja"
         self._selected_target = "en"
         
-        self._config = config
+        print(f'config: {config}')
+        
+        self._api_config = config
         
         self._whisper_device = "cuda" if torch.cuda.is_available() else "cpu"
-        self._model = wh.load_model("base", self._whisper_device)
-        self._model_2 = WhisperModel("large-v3", device="cuda", compute_type="float16")
+        self._model = WhisperModel("large-v3", device="cuda", compute_type="int8_float16")
               
         self._active_translators = {
             "deepl": False,
@@ -30,7 +29,7 @@ class Translate(object):
             "whisper": True
         }
         
-        if self._config["deepl"] != "":
+        if self._api_config["deepl"] != "":
             self._active_translators["deepl"] = True
         else:
             self._active_translators["deepl"] = False
@@ -44,10 +43,8 @@ class Translate(object):
 
     def set_api_keys(self, api_keys):
         if api_keys["deepl"] != "":
-            self._config["deepl"] = api_keys["deepl"]
-            self._active_translators["deepl"] = True
-        
-        print(f'keys: {api_keys}')    
+            self._api_config["deepl"] = api_keys["deepl"]
+            self._active_translators["deepl"] = True   
 
     def set_audio_data_config(self, config):
         self._config = config
@@ -60,12 +57,23 @@ class Translate(object):
         waveFile.setframerate(int(self._config["Framerate"]))
         waveFile.writeframes(b''.join(data))
         waveFile.close()
-    
+        
+    def get_transcription(self, translate:bool = False):
+        if translate:
+            segments, _ = self._model.transcribe("out.wav", beam_size=5, task="translate")
+        else:    
+            segments, _ = self._model.transcribe("out.wav", beam_size=5)
+
+        segments = list(segments)        
+        text = ""
+        for segment in segments:
+            text += segment.text
+            
+        return text    
+        
     def process_data(self, data, translator: int = 0):
         self.audio_to_wav(data)
-        
-        audio = wh.pad_or_trim(wh.load_audio("out.wav"))
-        orig = wh.transcribe(self._model, audio, fp16=False)["text"]
+        orig = self.get_transcription()
         
         if translator == 0:
             return orig, GoogleTranslator(source=self._selected_source, 
@@ -76,25 +84,10 @@ class Translate(object):
             try:
                 return orig, DeeplTranslator(source=self._selected_source, 
                                             target=self._selected_target,
-                                            api_key=self._config["deepl"],
+                                            api_key=self._api_config["deepl"],
                                             use_free_api=True).translate(text=orig)
             except Exception as ex:
-                return orig, "Valid DeepL API key required."
+                return orig, f'Failed to translate. Valid DeepL API key required. {ex}'
         else:
-            translated = wh.transcribe(self._model, audio, fp16=False, task="translate")["text"]
+            translated = self.get_transcription(True)
             return orig, translated
-        
-    def process_data_fw(self, data):
-        #self.audio_to_wav(data)
-        #segments, info = self._model_2.transcribe(data, beam_size=5)
-        
-        #segments = list(segments)
-        #print(f'output: {segments}')
-        
-        #text = ""
-        #for segment in segments:
-        #    text += segment.text
-            
-        #print(f'Full text: {text}')
-        orig = wh.transcribe(self._model, data, fp16=False)["text"]
-        print(f'Full text: {orig}')

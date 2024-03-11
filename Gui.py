@@ -43,6 +43,7 @@ class ChildDialog(object):
         }
         
         self._presenter.set_api_keys(keys)
+        self._diag_api_key.destroy()
 
 class Gui(object):
     def __init__(self):
@@ -231,14 +232,15 @@ class Gui(object):
     # Event/Gui functions  
     def onApiKeyMenu(self, event=None):
         api_key_diag = ChildDialog(self._root_window, self._presenter)
-        #self._diag_api_key = tk.Toplevel(master=self._root_window, width=300, height=200)
-        #self._diag_api_key.title("Api Keys")
-        
-        #self._btn_api_key_diag = tk.Button(self._diag_api_key, text='Set', width=10)
-        #self._btn_api_key_diag.place(x=110, y=170)
            
     def onListBoxSelection(self, event=None):
-        self._selected_device_index = self._listbox_devices.curselection()[0]
+        idx = self._selected_device_index
+        try: # Issue when focus is moved away to other things such as comboboxes
+            idx = self._listbox_devices.curselection()[0]
+        except Exception as ex:
+            idx = self._selected_device_index
+        self._selected_device_index = idx
+        
         device_info = self._presenter.get_device_list()[self._selected_device_index]
         device_host_info = self._presenter.get_device_host_api_info(self._selected_device_index)
         

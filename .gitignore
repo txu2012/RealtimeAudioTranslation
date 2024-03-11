@@ -2,3 +2,4 @@
 out.wav
 config.json
 config.json.bak
+__pycache__/*

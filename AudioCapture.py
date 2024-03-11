@@ -3,18 +3,12 @@ Created on Fri Mar  8 11:07:14 2024
 
 @author: Tony
 """
-import sounddevice as sd
 import pyaudio
 import wave
-import numpy
-import whisper
-import queue
-import sys
 
 class AudioCapture(object):
     def __init__(self):
         self._default_frames = 512
-        #self._default_frames = 16000*5
         
         self._record_time = 5
         self._pyaudio = pyaudio.PyAudio()
@@ -27,10 +21,6 @@ class AudioCapture(object):
         self._current_device_channel_count = 0
         
         self._recorded_chunks = []
-        self._model = whisper.load_model("base")
-        self._queue = queue.Queue()
-        self._running_stream = False
-        self._stream_sd = None
         
     def __enter__(self):
         return self
@@ -95,34 +85,3 @@ class AudioCapture(object):
     def close_stream(self):
         self._current_device_stream.stop_stream()
         self._current_device_stream.close()
-        
-    def sd_query_devices(self):
-        self._device_list_sd = sd.query_devices()
-        return self._device_list_sd
-    
-    def audio_callback(self, indata, frames, time, status):
-        if status:
-            print(status, file=sys.stderr)
-        self._queue.put(indata.copy())
-    
-    def sd_record_audio(self, index):
-        channels = self._device_list_sd[index]["max_input_channels"] \
-            if self._device_list_sd[index]["max_output_channels"] < self._device_list_sd[index]["max_input_channels"] \
-            else self._device_list_sd[index]["max_output_channels"] 
-            
-        self._stream_sd = sd.InputStream(device=index,
-                                samplerate=self._device_list_sd[index]["default_samplerate"],
-                                channels=channels,
-                                dtype=numpy.float32#,
-                                #callback=self.audio_callback
-                                )
-        
-        self._running_stream = True
-        self._stream_sd.start()
-        #await self.get_data()
-            
-    def get_data(self):
-        #while self._running_stream:
-        data,_ = self._stream_sd.read(int(512*5*self._device_list_sd[57]["default_samplerate"]))
-        self._queue.put(data)
-            #print("Temp")

@@ -3,11 +3,18 @@ import Translation
 import AudioCapture as ac
 import asyncio
 import threading
+import JsonConfig
+import queue
 
-sd = SoundDevice.SoundDevice()
-tr = Translation.Translate()
+_config = JsonConfig.Config('config.json')
+_config.load_json()
+#_translator = Translation.Translate(_config.load_values())
 
-ac = ac.AudioCapture()
+
+#sd = SoundDevice.SoundDevice()
+tr = Translation.Translate(_config.load_values())
+
+#ac = ac.AudioCapture()
 
 #for device in sd.enumerate_devices():
 #    if "CABLE" in device["name"]:
@@ -24,19 +31,37 @@ ac = ac.AudioCapture()
 #tr.process_data_fw(sd.record_audio())
 #sd.close_stream()
 
-devices = ac.sd_query_devices()
-print(f'{devices}')
+import sounddevice as sd
 
-ac.sd_record_audio(57)
+#devices = ac.sd_query_devices()
+#print(f'{devices}')
 
-def thread_acquire():
-    while True:
-        ac.get_data()
+#ac.set_device(73)
+#ac.sd_record_audio()
+
+devices = sd.query_devices()
+device = devices[73]
+sd.default.device = 73
+sd.default.samplerate = 48000
+sd.default.channels = 1
+sd.default.dtype = 'float32'
+
+data = sd.rec(int(5))
+
+q1 = queue.Queue()
+q1.put(data)
+#def thread_acquire():
+#    while True:
+#        q1.put(ac.get_data())
+        
 
 def thread_translate():
     while True:
-        tr.process_data_fw(ac._queue.get())
-        ac._queue.task_done()       
+        print('Preprocess')
+        data = q1.get()
+        tr.process_data_fw(data)
+        print("processing")
+        q1.task_done()       
     
-t0 = threading.Thread(target=thread_acquire, daemon=True).start()     
-t1 = threading.Thread(target=thread_translate, daemon=True).start()
+#t0 = threading.Thread(target=thread_acquire, daemon=False).start()     
+t1 = threading.Thread(target=thread_translate, daemon=False).start()
