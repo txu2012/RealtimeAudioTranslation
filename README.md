@@ -19,5 +19,6 @@ Select the loopback device that can be captured from and press start.
 
 Future:
 ----
+- Support for more translators (Api Keys required when needed)
 - Switch to faster-whisper
 - Add voice detection using Silero VAD
