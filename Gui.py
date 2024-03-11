@@ -18,6 +18,7 @@ class ChildDialog(object):
         self._keys = self._presenter._config.load_values()
         
         self._diag_api_key = tk.Toplevel(master=self._parent, width=400, height=200)
+        self._diag_api_key.resizable(False, False)
         self._diag_api_key.title("Api Keys")
         
         self._deepl_key = tk.StringVar()
@@ -25,21 +26,14 @@ class ChildDialog(object):
         self._deepl_entry = tk.Entry(self._diag_api_key, textvariable=self._deepl_key, width=40)
         self._deepl_entry.place(x=100, y= 20)
         
-        self._aai_key = tk.StringVar()
-        tk.Label(self._diag_api_key, text="AssemblyAi :").place(x=20, y=50)
-        self._aai_entry = tk.Entry(self._diag_api_key, textvariable=self._aai_key, width=40)
-        self._aai_entry.place(x=100, y= 50)
-        
         self._deepl_key.set(self._keys["deepl"])
-        self._aai_key.set(self._keys["assemblyai"])
         
         self._btn_api_key_diag = tk.Button(self._diag_api_key, text='Set', width=10, command=self.set_keys)
         self._btn_api_key_diag.place(x=160, y=170)
         
     def set_keys(self):
         keys = {
-            "deepl": self._deepl_key.get(),
-            "assemblyai": self._aai_key.get()
+            "deepl": self._deepl_key.get()
         }
         
         self._presenter.set_api_keys(keys)
