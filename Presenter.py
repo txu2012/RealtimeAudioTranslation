@@ -52,6 +52,7 @@ class Presenter(object):
     
     def set_api_keys(self, keys):
         self._translator.set_api_keys(keys)
+        self._config.save_json(keys)
     
     def start_translating(self):
         self._stop_threads = False
