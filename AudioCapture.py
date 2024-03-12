@@ -5,10 +5,12 @@ Created on Fri Mar  8 11:07:14 2024
 """
 import pyaudio
 import wave
+import numpy as np
+import scipy.signal as sig
 
 class AudioCapture(object):
     def __init__(self):
-        self._default_frames = 512
+        self._default_frames = 1024
         
         self._record_time = 5
         self._pyaudio = pyaudio.PyAudio()
@@ -21,13 +23,7 @@ class AudioCapture(object):
         self._current_device_channel_count = 0
         
         self._recorded_chunks = []
-        
-    def __enter__(self):
-        return self
-        
-    def __exit__(self, exception_type, exception_value, traceback):
-        self._pyaudio.terminate()
-        print('')
+        self._whisper_samplerate = 16000
         
     def enumerate_devices(self):
         for i in range(self._pyaudio.get_device_count()):
@@ -45,6 +41,11 @@ class AudioCapture(object):
         return self._pyaudio.get_host_api_info_by_index(self._device_list[index]["hostApi"])
     
     def open_stream(self):  
+        if self._current_device_stream is not None:
+            if self._current_device_stream.is_active():
+                self._current_device_stream.stop_stream()
+                self._current_device_stream.close()
+                
         self._current_device_channel_count = self._current_device["maxInputChannels"]  \
             if (self._current_device["maxOutputChannels"] < self._current_device["maxInputChannels"]) \
             else self._current_device["maxOutputChannels"] 
@@ -63,7 +64,7 @@ class AudioCapture(object):
             "SampleWidth": self._pyaudio.get_sample_size(pyaudio.paInt16),
             "Channels": self._current_device_channel_count
         }
-        
+
         return audio_config
     
     def record_audio(self, length: int = 5):    
@@ -71,17 +72,20 @@ class AudioCapture(object):
         for i in range(0, int(int(self._current_device["defaultSampleRate"]) / self._default_frames * length)):
             recorded_chunks.append(self._current_device_stream.read(self._default_frames))
         
-        return recorded_chunks  
+        # Convert to numpy float32
+        stream_arr = np.frombuffer(b''.join(recorded_chunks), dtype=np.int16)
+        stream_data = stream_arr.astype(np.float32) / np.iinfo(stream_arr.dtype).max
         
-    def save_audio(self, data):
-        filename = "out.wav"
-        waveFile = wave.open(filename, 'wb')
-        waveFile.setnchannels(self._current_device_channel_count)
-        waveFile.setsampwidth(self._pyaudio.get_sample_size(pyaudio.paInt16))
-        waveFile.setframerate(int(self._current_device["defaultSampleRate"]))
-        waveFile.writeframes(b''.join(data))
-        waveFile.close()
+        # Downsample to 16kHz audio
+        num_samples = round(len(stream_data) * float(self._whisper_samplerate) / self._current_device["defaultSampleRate"])
+        resampled_data = sig.resample(stream_data, num_samples)
         
-    def close_stream(self):
-        self._current_device_stream.stop_stream()
-        self._current_device_stream.close()
+        return resampled_data
+        
+    def terminate(self):
+        try:
+            self._current_device_stream.stop_stream()
+            self._current_device_stream.close()
+            self._pyaudio.terminate()
+        except Exception as ex:
+            pass

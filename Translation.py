@@ -48,21 +48,12 @@ class Translate(object):
 
     def set_audio_data_config(self, config):
         self._config = config
-    
-    def audio_to_wav(self, data):
-        filename = "out.wav"
-        waveFile = wave.open(filename, 'wb')
-        waveFile.setnchannels(self._config["Channels"])
-        waveFile.setsampwidth(self._config["SampleWidth"])
-        waveFile.setframerate(int(self._config["Framerate"]))
-        waveFile.writeframes(b''.join(data))
-        waveFile.close()
         
-    def get_transcription(self, translate:bool = False):
+    def get_transcription(self, data = None, translate:bool = False):
         if translate:
-            segments, _ = self._model.transcribe("out.wav", beam_size=5, task="translate", vad_filter=True)
+            segments, _ = self._model.transcribe(data, beam_size=5, task="translate", vad_filter=True)
         else:    
-            segments, _ = self._model.transcribe("out.wav", beam_size=5, vad_filter=True)
+            segments, _ = self._model.transcribe(data, beam_size=5, vad_filter=True)
 
         segments = list(segments)        
         text = ""
@@ -72,8 +63,7 @@ class Translate(object):
         return text    
         
     def process_data(self, data, translator: int = 0):
-        self.audio_to_wav(data)
-        orig = self.get_transcription()
+        orig = self.get_transcription(data=data)
         
         if translator == 0:
             return orig, GoogleTranslator(source=self._selected_source, 
