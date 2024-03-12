@@ -39,6 +39,62 @@ class ChildDialog(object):
         self._presenter.set_api_keys(keys)
         self._diag_api_key.destroy()
 
+class PopoutWindow(object):
+    def __init__(self, parent, presenter):
+        self._parent = parent
+        self._presenter = presenter
+        self._presenter.PopupExists = True
+        
+        self._popout = tk.Toplevel(self._parent, width=800, height=200)
+        self._popout.minsize(width=1250, height=200)
+        self._popout.title("Subtitles")
+        self._popout.attributes('-alpha', 0.65)
+        
+        self._txt_orig = scrolledtext.ScrolledText(self._popout)
+        self._txt_orig.config(state='disabled', 
+                              background='black', 
+                              foreground='white', 
+                              font=('Times New Roman', 15, 'bold'), 
+                              width=60,
+                              height=10)
+        self._txt_orig.tag_add("time", "1.0", "1.20", "start")
+        self._txt_orig.tag_config("time", foreground="red")
+        self._txt_orig.pack(side='left', fill='both', expand=True)
+        
+        self._txt_translated = scrolledtext.ScrolledText(self._popout)
+        self._txt_translated.config(state='disabled', 
+                                    background='black', 
+                                    foreground='white', 
+                                    font=('Times New Roman', 15, 'bold'), 
+                                    width=60,
+                                    height=10)
+        self._txt_translated.tag_add("time", "1.0", "1.20", "start")
+        self._txt_translated.tag_config("time", foreground="red")
+        self._txt_translated.pack(side='left', fill='both', expand=True)
+
+        self._popout.protocol("WM_DELETE_WINDOW", self.on_closing)  
+        
+    def update_text(self, original, translated):
+        formatted_string = datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d.%H:%M:%S")
+        
+        self._txt_orig.config(state='normal')
+        self._txt_orig.insert(tk.END, formatted_string + ":\n",("time"))
+        self._txt_orig.yview(tk.END)
+        self._txt_orig.insert(tk.END, original + '\n')
+        self._txt_orig.yview(tk.END)        
+        self._txt_orig.config(state='disabled')
+        
+        self._txt_translated.config(state='normal')
+        self._txt_translated.insert(tk.END, formatted_string + ":\n", ("time"))
+        self._txt_translated.yview(tk.END)
+        self._txt_translated.insert(tk.END, translated + '\n')
+        self._txt_translated.yview(tk.END)
+        self._txt_translated.config(state='disabled')
+        
+    def on_closing(self):        
+        self._presenter.PopupExists = False
+        self._popout.destroy()
+
 class Gui(object):
     def __init__(self):
         self._root_window = tk.Tk()
@@ -58,6 +114,7 @@ class Gui(object):
         
         self._supported_langs = ["en", "ja"]
         self._translators = ["Google", "DeepL", "Whisper"]
+        self._popout = None
         
     def __enter__(self):
         return self    
@@ -90,8 +147,11 @@ class Gui(object):
         file_menu = tk.Menu(self._menu, tearoff=False)
         file_menu.add_cascade(label="Api Keys", command=self.onApiKeyMenu)
         file_menu.add_command(label='Exit', command=self._root_window.destroy)
-        
         self._menu.add_cascade(label="File", menu=file_menu)    
+        
+        view_menu = tk.Menu(self._menu, tearoff=False)
+        view_menu.add_cascade(label="Popout subs", command=self.onPopoutMenu)
+        self._menu.add_cascade(label="View", menu=view_menu)
         
     # GUI Creation
     def create_main_frame(self):
@@ -205,6 +265,9 @@ class Gui(object):
         self._txt_translated.yview(tk.END)
         self._txt_translated.config(state='disabled')
         
+        if self._presenter.PopupExists:
+            self._popout.update_text(original, translated)
+        
         self.UpdateView()
         
     def UpdateView(self):            
@@ -224,6 +287,9 @@ class Gui(object):
             self._btn_stop.config(state='disabled')
         
     # Event/Gui functions  
+    def onPopoutMenu(self, event=None):
+        self._popout = PopoutWindow(self._root_window, self._presenter)
+        
     def onApiKeyMenu(self, event=None):
         api_key_diag = ChildDialog(self._root_window, self._presenter)
            
