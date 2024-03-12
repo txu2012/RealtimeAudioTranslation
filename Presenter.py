@@ -98,11 +98,8 @@ class Presenter(object):
                 self._translator.process_data(audio, self._translator_index)            
             
             if str(transcribed_text) == str(" you"):
-                self._audio_queue.task_done()
                 continue
             
             self._view.UpdateTextFields(transcribed_text, translated_text)
-            
-            self._audio_queue.task_done()
    
             

@@ -5,10 +5,12 @@ Created on Fri Mar  8 11:07:14 2024
 """
 import pyaudio
 import wave
+import numpy as np
+import scipy.signal as sig
 
 class AudioCapture(object):
     def __init__(self):
-        self._default_frames = 512
+        self._default_frames = 1024
         
         self._record_time = 5
         self._pyaudio = pyaudio.PyAudio()
@@ -21,6 +23,7 @@ class AudioCapture(object):
         self._current_device_channel_count = 0
         
         self._recorded_chunks = []
+        self._whisper_samplerate = 16000
         
     def __enter__(self):
         return self
@@ -71,7 +74,15 @@ class AudioCapture(object):
         for i in range(0, int(int(self._current_device["defaultSampleRate"]) / self._default_frames * length)):
             recorded_chunks.append(self._current_device_stream.read(self._default_frames))
         
-        return recorded_chunks  
+        # Convert to numpy float32
+        stream_arr = np.frombuffer(b''.join(recorded_chunks), dtype=np.int16)
+        stream_data = stream_arr.astype(np.float32) / np.iinfo(stream_arr.dtype).max
+        
+        # Downsample to 16kHz audio
+        num_samples = round(len(stream_data) * float(self._whisper_samplerate) / self._current_device["defaultSampleRate"])
+        resampled_data = sig.resample(stream_data, num_samples)
+        
+        return resampled_data
         
     def save_audio(self, data):
         filename = "out.wav"
