@@ -115,18 +115,13 @@ class Gui(object):
         self._supported_langs = ["en", "ja"]
         self._translators = ["Google", "DeepL", "Whisper"]
         self._popout = None
-        
-    def __enter__(self):
-        return self    
-        
-    def __exit__(self):
-        print('')
-        
+
     def set_presenter(self, presenter):
         self._presenter = presenter
         
     def on_closing(self):        
         self._presenter.stop_translating()
+        self._presenter._device.terminate()
         self._root_window.destroy()
         
     def initialize(self):
@@ -294,27 +289,29 @@ class Gui(object):
         api_key_diag = ChildDialog(self._root_window, self._presenter)
            
     def onListBoxSelection(self, event=None):
-        idx = self._selected_device_index
-        try: # Issue when focus is moved away to other things such as comboboxes
-            idx = self._listbox_devices.curselection()[0]
-        except Exception as ex:
+        try:
             idx = self._selected_device_index
-        self._selected_device_index = idx
-        
-        device_info = self._presenter.get_device_list()[self._selected_device_index]
-        device_host_info = self._presenter.get_device_host_api_info(self._selected_device_index)
-        
-        self._txt_device_info.config(state='normal')
-        self._txt_device_info.delete(1.0, tk.END)
-        
-        for key, value in device_info.items():
-            self._txt_device_info.insert(tk.END, key + " : " + str(value) + "\n")
+            try: # Issue when focus is moved away to other things such as comboboxes
+                idx = self._listbox_devices.curselection()[0]
+            except Exception as ex:
+                idx = self._selected_device_index
+            self._selected_device_index = idx
             
-        self._txt_device_info.insert(tk.END,"\nHost Api Info:\n")
-        
-        for key, value in device_host_info.items():
-            self._txt_device_info.insert(tk.END, key + " : " + str(value) + "\n")
-        
+            device_info = self._presenter.get_device_list()[self._selected_device_index]
+            device_host_info = self._presenter.get_device_host_api_info(self._selected_device_index)
+            
+            self._txt_device_info.config(state='normal')
+            self._txt_device_info.delete(1.0, tk.END)
+            
+            for key, value in device_info.items():
+                self._txt_device_info.insert(tk.END, key + " : " + str(value) + "\n")
+                
+            self._txt_device_info.insert(tk.END,"\nHost Api Info:\n")
+            
+            for key, value in device_host_info.items():
+                self._txt_device_info.insert(tk.END, key + " : " + str(value) + "\n")
+        except Exception as ex:
+            pass
         self.UpdateView()
             
     def onBtnStartClick(self):

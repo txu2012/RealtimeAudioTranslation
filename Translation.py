@@ -48,15 +48,6 @@ class Translate(object):
 
     def set_audio_data_config(self, config):
         self._config = config
-    
-    #def audio_to_wav(self, data):
-    #    filename = "out.wav"
-    #    waveFile = wave.open(filename, 'wb')
-    #    waveFile.setnchannels(self._config["Channels"])
-    #    waveFile.setsampwidth(self._config["SampleWidth"])
-    #    waveFile.setframerate(int(self._config["Framerate"]))
-    #    waveFile.writeframes(b''.join(data))
-    #    waveFile.close()
         
     def get_transcription(self, data = None, translate:bool = False):
         if translate:
@@ -72,7 +63,6 @@ class Translate(object):
         return text    
         
     def process_data(self, data, translator: int = 0):
-        #self.audio_to_wav(data)
         orig = self.get_transcription(data=data)
         
         if translator == 0:

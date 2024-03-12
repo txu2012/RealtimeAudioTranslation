@@ -7,6 +7,7 @@ Created on Fri Mar  8 11:07:14 2024
 import threading
 import queue
 import Translation
+import time
 
 class Presenter(object):
     def __init__(self, model, view, config):
@@ -70,6 +71,7 @@ class Presenter(object):
     def start_translating(self):
         self._stop_threads = False
         audio_config = self._device.open_stream()
+        
         self._translator.set_audio_data_config(audio_config)
         
         if not self._audio_queue.empty:
@@ -77,19 +79,17 @@ class Presenter(object):
         
         self._audio_queue = queue.Queue()
         self._translated_queue = queue.Queue() 
-        
+         
         self._acquire_th = threading.Thread(target=self.acquire_audio, daemon=True).start()
         self._translate_th = threading.Thread(target=self.translate_audio, daemon=True).start()
         
         self._workers_running = True
         
-    def acquire_audio(self):
+    def acquire_audio(self):        
         while not self._stop_threads:
             data = self._device.record_audio(self._audio_time_acquire)
             self._audio_queue.put(data)
-            
-        self._device.close_stream()
-            
+                            
     def translate_audio(self):
         while not self._stop_threads:
             audio = self._audio_queue.get()
@@ -97,7 +97,7 @@ class Presenter(object):
             transcribed_text, translated_text = \
                 self._translator.process_data(audio, self._translator_index)            
             
-            if str(transcribed_text) == str(" you"):
+            if str(transcribed_text) == str(" you") or str(transcribed_text) == "":
                 continue
             
             self._view.UpdateTextFields(transcribed_text, translated_text)
