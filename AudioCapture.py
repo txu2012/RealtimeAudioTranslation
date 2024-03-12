@@ -40,6 +40,9 @@ class AudioCapture(object):
     def get_device_host_api_info(self, index):
         return self._pyaudio.get_host_api_info_by_index(self._device_list[index]["hostApi"])
     
+    def stream_active(self) -> bool:
+        return self._current_device_stream.is_active()
+    
     def open_stream(self):  
         if self._current_device_stream is not None:
             if self._current_device_stream.is_active():
@@ -72,15 +75,18 @@ class AudioCapture(object):
         for i in range(0, int(int(self._current_device["defaultSampleRate"]) / self._default_frames * length)):
             recorded_chunks.append(self._current_device_stream.read(self._default_frames))
         
-        # Convert to numpy float32
-        stream_arr = np.frombuffer(b''.join(recorded_chunks), dtype=np.int16)
+        return recorded_chunks
+        
+    def convert_and_resample(self, data):
+         # Convert to numpy float32
+        stream_arr = np.frombuffer(b''.join(data), dtype=np.int16)
         stream_data = stream_arr.astype(np.float32) / np.iinfo(stream_arr.dtype).max
         
         # Downsample to 16kHz audio
         num_samples = round(len(stream_data) * float(self._whisper_samplerate) / self._current_device["defaultSampleRate"])
-        resampled_data = sig.resample(stream_data, num_samples)
+        resampled_data = sig.resample(stream_data, num_samples)   
         
-        return resampled_data
+        return resampled_data 
         
     def terminate(self):
         try:

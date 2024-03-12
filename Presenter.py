@@ -22,11 +22,11 @@ class Presenter(object):
 
         self._device_selected = False
         
-        self._stop_threads = True
+        self._event = threading.Event()
         self._workers_running = False
         
         self._audio_queue = queue.Queue()
-        self._translated_queue = queue.Queue()
+        self._translate_queue = queue.Queue()
         self._audio_time_acquire = 5
         self._translator_index = 0
         self._popup_exists = False
@@ -65,37 +65,43 @@ class Presenter(object):
         self._config.save_json(keys)
         
     def stop_translating(self):
-        self._stop_threads = True
+        self._event.set()
         self._workers_running = False
     
     def start_translating(self):
-        self._stop_threads = False
+        self._event.clear()
         audio_config = self._device.open_stream()
         
         self._translator.set_audio_data_config(audio_config)
         
-        if not self._audio_queue.empty:
-            self.clear_queues()
-        
         self._audio_queue = queue.Queue()
-        self._translated_queue = queue.Queue() 
-         
-        self._acquire_th = threading.Thread(target=self.acquire_audio, daemon=True).start()
-        self._translate_th = threading.Thread(target=self.translate_audio, daemon=True).start()
+        self._translate_queue = queue.Queue() 
+        
+        self._acquire_th = threading.Thread(target=self.acquire_audio, daemon=True, args=(self._event,)).start()
+        self._process_th = threading.Thread(target=self.process_audio, daemon=True, args=(self._event,)).start()
+        self._translate_th = threading.Thread(target=self.translate_audio, daemon=True, args=(self._event,)).start()
         
         self._workers_running = True
         
-    def acquire_audio(self):        
-        while not self._stop_threads:
-            data = self._device.record_audio(self._audio_time_acquire)
-            self._audio_queue.put(data)
+    def acquire_audio(self, event: threading.Event) -> None:        
+        while not event.is_set():
+            if self._device.stream_active():
+                data = self._device.record_audio(self._audio_time_acquire)
+                self._audio_queue.put(data)
+        
+    def process_audio(self, event: threading.Event) -> None:
+        while not event.is_set():
+            audio = self._audio_queue.get() 
+            resampled_data = self._device.convert_and_resample(audio)
+            
+            self._translate_queue.put(resampled_data)   
                             
-    def translate_audio(self):
-        while not self._stop_threads:
-            audio = self._audio_queue.get()
+    def translate_audio(self, event: threading.Event) -> None:
+        while not event.is_set():
+            resampled = self._translate_queue.get()
             
             transcribed_text, translated_text = \
-                self._translator.process_data(audio, self._translator_index)            
+                self._translator.process_data(resampled, self._translator_index)            
             
             if str(transcribed_text) == str(" you") or str(transcribed_text) == "":
                 continue
