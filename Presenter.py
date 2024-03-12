@@ -28,9 +28,17 @@ class Presenter(object):
         self._translated_queue = queue.Queue()
         self._audio_time_acquire = 5
         self._translator_index = 0
+        self._popup_exists = False
+        
+    @property
+    def PopupExists(self):            
+        return self._popup_exists
+    @PopupExists.setter
+    def PopupExists(self, value):
+        self._popup_exists = value                        
                 
     def initialize(self):
-        self._view.initialize()    
+        self._view.initialize()
         
     def get_device_list(self):
         return self._device_list

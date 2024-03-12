@@ -33,6 +33,11 @@ Updates:
 - Switch from original Whisper package to faster-whisper package
     - Speed of transcription has increased from the switch.
 
+**2024-03-12**
+- New pop out semi-transparent window to act as subtitles.
+
+![alt text](image-1.png)
+
 Future:
 ----
 - [ ] Support for more translators/languages (Api Keys required when needed)
