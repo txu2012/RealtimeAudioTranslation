@@ -1,4 +1,4 @@
-# RealtimeAudioTranslation
+# Realtime Audio Translation
  
 Uses PyAudio, deep-translator, and [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (GPU cuda processing) to capture computer audio and translate in "real time" (there is a delay between capture and display).
 
@@ -16,6 +16,7 @@ Python 3.8.0 minimum required and the following packages:
 pip install faster-whisper
 pip install pyaudio
 pip install deep-translator
+pip install scipy
 ```
 
 Run Main.py file to start program. 

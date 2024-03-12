@@ -4,7 +4,6 @@ Created on Fri Mar  8 11:07:14 2024
 @author: Tony
 """
 import pyaudio
-import wave
 import numpy as np
 import scipy.signal as sig
 

@@ -5,7 +5,6 @@ Created on Fri Mar  8 11:07:14 2024
 """
 
 from faster_whisper import WhisperModel
-import wave
 import os
 import torch
 from deep_translator import (GoogleTranslator,
