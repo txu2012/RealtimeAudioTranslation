@@ -43,3 +43,4 @@ Future:
 - [ ] Support for more translators/languages (Api Keys required when needed)
     - [x] DeepL Translation
 - [x] Switch to faster-whisper (voice detection using Silero VAD)
+- [ ] Directly connect pyaudio to faster-whisper and omit converting to wav(?)
