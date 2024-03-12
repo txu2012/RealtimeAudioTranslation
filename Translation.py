@@ -60,9 +60,9 @@ class Translate(object):
         
     def get_transcription(self, translate:bool = False):
         if translate:
-            segments, _ = self._model.transcribe("out.wav", beam_size=5, task="translate")
+            segments, _ = self._model.transcribe("out.wav", beam_size=5, task="translate", vad_filter=True)
         else:    
-            segments, _ = self._model.transcribe("out.wav", beam_size=5)
+            segments, _ = self._model.transcribe("out.wav", beam_size=5, vad_filter=True)
 
         segments = list(segments)        
         text = ""
