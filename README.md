@@ -9,7 +9,7 @@ Currently translating Japanese to English and vice versa supported.
 To Use:
 ----
 Faster-whisper with GPU requires the installation of [cuBLAS](https://developer.nvidia.com/cublas) and [cuDNN8](https://developer.nvidia.com/cudnn)
-
+(or grab from Purview's repository [here](https://github.com/Purfview/whisper-standalone-win/releases/tag/libs), however the the cuBLAS 12 is needed so downloading from above is still needed.)
 Python 3.8.0 minimum required and the following packages:
 
 ```
