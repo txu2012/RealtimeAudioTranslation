@@ -2,7 +2,7 @@
  
 Uses PyAudio, deep-translator, and [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (GPU cuda processing) to capture computer audio and translate in "real time" (there is a delay between capture and display).
 
-To capture computer audio, a loopback system is needed to feed audio into an input for pyaudio to record. A virtual audio cable (eg. VB Audio) can be used to create a loopback to capture from.
+To capture computer audio, a loopback system in 1 channel (for whisper) is needed to feed audio into an input for pyaudio to record. A virtual audio cable (eg. VB Audio) can be used to create a loopback to capture from.
 
 Currently translating Japanese to English and vice versa supported.
 
