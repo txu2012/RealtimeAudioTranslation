@@ -17,6 +17,7 @@ pip install faster-whisper
 pip install pyaudio
 pip install deep-translator
 pip install scipy
+pip install torch
 ```
 
 Run Main.py file to start program. 
